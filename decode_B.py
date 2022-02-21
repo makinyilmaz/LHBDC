@@ -62,8 +62,8 @@ def ups(flow):
 
 def decode_B(x_before, x_after, model, string_flow, string_res, shape_flow, shape_res):
     
-    flow_ba = F.avg_pool2d(model.estimate_flow(x_before, x_after) / 2., 4) 
-    flow_ab = F.avg_pool2d(model.estimate_flow(x_after, x_before) / 2., 4)
+    flow_ba = F.avg_pool2d(model.FlowNet(x_before, x_after) / 2., 4) 
+    flow_ab = F.avg_pool2d(model.FlowNet(x_after, x_before) / 2., 4)
     nnn,ccc,hhh,www = flow_ab.size()
 
     flow_ba = pad(flow_ab)
@@ -72,9 +72,9 @@ def decode_B(x_before, x_after, model, string_flow, string_res, shape_flow, shap
     flow_result = model.mv_compressor.decompress(string_flow, shape_flow)["x_hat"] 
     flow_cb_hat, flow_ca_hat = torch.chunk(flow_result, 2, dim=1)
     flow_cb_hat = flow_cb_hat + flow_ab
-    flow_cb_hat = ups(flow_cb_hat[:, :, :hhh, :www])
+    flow_cb_hat = model.upsample_flow(flow_cb_hat[:, :, :hhh, :www])
     flow_ca_hat = flow_ca_hat + flow_ba
-    flow_ca_hat = ups(flow_ca_hat[:, :, :hhh, :www])
+    flow_ca_hat = model.upsample_flow(flow_ca_hat[:, :, :hhh, :www])
 
     fw, bw = model.backwarp(x_before, flow_cb_hat), model.backwarp(x_after, flow_ca_hat)
     mask = model.masknet(torch.cat([fw, bw], dim=1)).repeat([1, 3, 1, 1]) 
