@@ -24,7 +24,7 @@ parser.add_argument("--ref_1", default='frames/ref_1.png')
 parser.add_argument("--ref_2", default='frames/ref_2.png')
 parser.add_argument("--current", default='frames/current.png')
 parser.add_argument("--bin", default='bits_B.bin')
-parser.add_argument("--l", type=int, default=228, choices=[228, 436])
+parser.add_argument("--l", type=int, default=436, choices=[228, 436])
 args = parser.parse_args()
 
 
@@ -71,15 +71,15 @@ def ups(flow):
 def encode_B(model, x_after, x_current, x_before):
         
 
-    flow_ba = F.avg_pool2d(model.estimate_flow(x_before, x_after) / 2., 4)
-    flow_ab = F.avg_pool2d(model.estimate_flow(x_after, x_before) / 2., 4)
+    flow_ba = F.avg_pool2d(model.FlowNet(x_before, x_after) / 2., 4)
+    flow_ab = F.avg_pool2d(model.FlowNet(x_after, x_before) / 2., 4)
     nnn,ccc,hhh,www = flow_ab.size()
 
     flow_ba = pad(flow_ab)
     flow_ab = pad(flow_ba)
 
-    flow_cb = F.avg_pool2d(model.estimate_flow(x_current, x_before), 4)
-    flow_ca = F.avg_pool2d(model.estimate_flow(x_current, x_after), 4)
+    flow_cb = F.avg_pool2d(model.FlowNet(x_current, x_before), 4)
+    flow_ca = F.avg_pool2d(model.FlowNet(x_current, x_after), 4)
 
     flow_cb = pad(flow_cb)
     flow_ca = pad(flow_ca)
@@ -89,9 +89,9 @@ def encode_B(model, x_after, x_current, x_before):
     flow_result = model.mv_compressor(diff_flow)
     flow_cb_hat, flow_ca_hat = torch.chunk(flow_result["x_hat"], 2, dim=1)
     flow_cb_hat = flow_cb_hat + flow_ab
-    flow_cb_hat = ups(flow_cb_hat[:, :, :hhh, :www])
+    flow_cb_hat = model.upsample_flow(flow_cb_hat[:, :, :hhh, :www])
     flow_ca_hat = flow_ca_hat + flow_ba
-    flow_ca_hat = ups(flow_ca_hat[:, :, :hhh, :www])
+    flow_ca_hat = model.upsample_flow(flow_ca_hat[:, :, :hhh, :www])
 
     mv_bits = model.mv_compressor.compress(diff_flow) # 25 ms
 
