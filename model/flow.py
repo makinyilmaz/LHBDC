@@ -7,7 +7,7 @@ import os
 import sys
 
 
-device = torch.device("cuda:0")
+device = torch.device("cuda:1")
 ##########################################################
 
 backwarp_tenGrid = {}
@@ -71,6 +71,7 @@ class Network(torch.nn.Module):
 
         self.netBasic = torch.nn.ModuleList([ Basic(intLevel) for intLevel in range(6) ])
 
+        #self.load_state_dict({ strKey.replace('module', 'net'): tenWeight for strKey, tenWeight in torch.load('/kuacc/users/mustafaakinyilmaz/Video_Compression/network-sintel-final.pytorch').items() })
     # end
 
     def forward(self, tenFirst, tenSecond):
