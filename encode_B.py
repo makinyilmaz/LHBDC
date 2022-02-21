@@ -24,7 +24,7 @@ parser.add_argument("--ref_1", default='frames/ref_1.png')
 parser.add_argument("--ref_2", default='frames/ref_2.png')
 parser.add_argument("--current", default='frames/current.png')
 parser.add_argument("--bin", default='bits_B.bin')
-parser.add_argument("--l", type=int, default=436, choices=[228, 436])
+parser.add_argument("--l", type=int, default=436, choices=[228, 436, 845, 1626, 3141])
 args = parser.parse_args()
 
 
