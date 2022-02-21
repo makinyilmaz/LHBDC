@@ -54,11 +54,6 @@ def process_frame(img):
     x  = pad(x)
     return x
 
-def ups(flow):
-    upsample_flow = nn.Upsample(scale_factor=4, mode='bilinear')
-    return upsample_flow(flow)
-
-
 
 def decode_B(x_before, x_after, model, string_flow, string_res, shape_flow, shape_res):
     
