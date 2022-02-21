@@ -7,7 +7,7 @@ import os
 import sys
 
 
-device = torch.device("cuda:1")
+device = torch.device("cuda")
 ##########################################################
 
 backwarp_tenGrid = {}
