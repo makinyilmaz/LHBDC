@@ -42,53 +42,102 @@ def deconv(in_channels, out_channels, kernel_size=5, stride=2):
 
 class MVCompressor(MeanScaleHyperprior):
 
-    def __init__(self, N=128, M=192, **kwargs):
-        super().__init__(N=N, M=M, **kwargs)
+    def __init__(self, N=128, **kwargs):
+        super().__init__(N=N, M=N, **kwargs)
 
         self.g_a = nn.Sequential(
-            conv(4, N),
-            GDN(N),
-            conv(N, N),
-            GDN(N),
-            conv(N, N),
-            GDN(N),
-            conv(N, M),
+            ResidualBlockWithStride(4, N, stride=2),
+            ResidualBlock(N, N),
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N),
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N),
+            conv3x3(N, N, stride=2),
+        )
+
+        self.h_a = nn.Sequential(
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N, stride=2),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N, stride=2),
+        )
+
+        self.h_s = nn.Sequential(
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            subpel_conv3x3(N, N, 2),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N * 3 // 2),
+            nn.LeakyReLU(inplace=True),
+            subpel_conv3x3(N * 3 // 2, N * 3 // 2, 2),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N * 3 // 2, N * 2),
         )
 
         self.g_s = nn.Sequential(
-            deconv(M, N),
-            GDN(N, inverse=True),
-            deconv(N, N),
-            GDN(N, inverse=True),
-            deconv(N, N),
-            GDN(N, inverse=True),
-            deconv(N, 4),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            subpel_conv3x3(N, 4, 2),
         )
-
         
 class ResidualCompressor(MeanScaleHyperprior):
 
-    def __init__(self, N=128, M=192, **kwargs):
-        super().__init__(N=N, M=M, **kwargs)
+    def __init__(self, N=128, **kwargs):
+        super().__init__(N=N, M=N, **kwargs)
 
         self.g_a = nn.Sequential(
-            conv(3, N),
-            GDN(N),
-            conv(N, N),
-            GDN(N),
-            conv(N, N),
-            GDN(N),
-            conv(N, M),
+            ResidualBlockWithStride(3, N, stride=2),
+            ResidualBlock(N, N),
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N),
+            ResidualBlockWithStride(N, N, stride=2),
+            ResidualBlock(N, N),
+            conv3x3(N, N, stride=2),
+        )
+
+        self.h_a = nn.Sequential(
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N, stride=2),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N, stride=2),
+        )
+
+        self.h_s = nn.Sequential(
+            conv3x3(N, N),
+            nn.LeakyReLU(inplace=True),
+            subpel_conv3x3(N, N, 2),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N, N * 3 // 2),
+            nn.LeakyReLU(inplace=True),
+            subpel_conv3x3(N * 3 // 2, N * 3 // 2, 2),
+            nn.LeakyReLU(inplace=True),
+            conv3x3(N * 3 // 2, N * 2),
         )
 
         self.g_s = nn.Sequential(
-            deconv(M, N),
-            GDN(N, inverse=True),
-            deconv(N, N),
-            GDN(N, inverse=True),
-            deconv(N, N),
-            GDN(N, inverse=True),
-            deconv(N, 3),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            ResidualBlockUpsample(N, N, 2),
+            ResidualBlock(N, N),
+            subpel_conv3x3(N, 3, 2),
         )
         
         
@@ -149,3 +198,4 @@ class Mask(nn.Module):
         mask = torch.sigmoid(self.conv4(x))
 
         return mask
+
