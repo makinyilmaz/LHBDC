@@ -4,6 +4,8 @@
 # The first column contains bits per pixel (bpp) values.
 # The second column contains PSNR
 
+# Aggregated
+
 0.0457,    35.43 
 0.0648,    36.53
 0.0950,    37.51
